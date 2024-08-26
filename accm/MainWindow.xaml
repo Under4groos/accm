@@ -5,11 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:accm"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="MainWindow" Height="200" Width="100"
         WindowStyle="None"
         AllowsTransparency="True"
+        Topmost="True"
         >
     <Grid>
-
+        <StackPanel>
+            <Button Click="Button_Click">Click</Button>
+        </StackPanel>
     </Grid>
 </Window>

@@ -3,18 +3,41 @@
 namespace accm.Module
 {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    public delegate void __key_down(int key);
+    public delegate void _mouse_hook_pkm(UIntPtr key, int x, int y);
 
 
 
     public static partial class Helper
     {
+#if DEBUG
 
-        public const string dll_ = "winapi_module.dll";
+        public const string dll_ = @"C:\Users\UnderKo\source\repos\accm\x64\Release\winapi_module.dll";
+#else
+        //public const string dll_ = "winapi_module.dll";
+#endif
+
 
         [LibraryImport(dll_, SetLastError = true, StringMarshalling = StringMarshalling.Utf16, EntryPoint = "InitHook")]
-        internal static partial int InitHook(__key_down __Key_Down);
+        internal static partial int InitHook(IntPtr win);
 
+        [LibraryImport(dll_, SetLastError = true, StringMarshalling = StringMarshalling.Utf16, EntryPoint = "SetHWNDWindow")]
+        internal static partial void SetHWNDWindow(IntPtr win);
+
+
+        [LibraryImport("user32.dll")]
+        public static partial IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowPos")]
+        public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
+
+
+
+
+        public static void SetPositionWin(IntPtr hwnd, int x, int y, bool isShow = true)
+        {
+
+            Helper.SetWindowPos(hwnd, -1, x, y, 0, 0, 0x0001 | 0x0004 | (isShow ? 0x0040 : 0x0080));
+        }
 
 
         //[DllImport(dll_, CharSet = CharSet.Auto, SetLastError = true)]
@@ -22,8 +45,7 @@ namespace accm.Module
 
         //public delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
-        //[DllImport("user32.dll")]
-        //public static extern IntPtr GetForegroundWindow();
+
 
         //[DllImport("user32.dll")]
         //public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
@@ -49,15 +71,6 @@ namespace accm.Module
 
         //public static extern IntPtr GetModuleHandle(string lpModuleName);
     }
-    //public enum MouseMessages
-    //{
-    //    WM_LBUTTONDOWN = 0x0201,
-    //    WM_LBUTTONUP = 0x0202,
-    //    WM_MOUSEMOVE = 0x0200,
-    //    WM_MOUSEWHEEL = 0x020A,
-    //    WM_RBUTTONDOWN = 0x0204,
-    //    WM_RBUTTONUP = 0x0205
-    //}
 
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT
@@ -65,127 +78,30 @@ namespace accm.Module
         public int x;
         public int y;
     }
+    public enum MosueButtons
+    {
+        WM_LBUTTONDOWN = 0x0201,
+        WM_LBUTTONUP = 0x0202,
+        WM_LBUTTONDBLCLK = 0x0203,
+        WM_RBUTTONDOWN = 0x0204,
+        WM_RBUTTONUP = 0x0205,
+        WM_RBUTTONDBLCLK = 0x0206,
+        WM_MBUTTONDOWN = 0x0207,
+        WM_MBUTTONUP = 0x0208,
+        WM_MBUTTONDBLCLK = 0x0209,
+    }
+    public unsafe struct Mouse_wParam
+    {
+        public int X;
+        public int Y;
+        public int wParam;
 
+        public override string ToString()
+        {
+            return $"{(wParam)} => {X}/{Y}";
+        }
+    }
 
-
-    //[StructLayout(LayoutKind.Sequential)]
-    //public struct MSLLHOOKSTRUCT
-    //{
-    //    public POINT pt;
-    //    public uint mouseData;
-    //    public uint flags;
-    //    public uint time;
-    //    public IntPtr dwExtraInfo;
-    //}
-
-
-    //public class MouseHook
-    //{
-    //    Helper.LowLevelMouseProc _proc;
-    //    private IntPtr _hookID = IntPtr.Zero;
-    //    private const int WH_MOUSE_LL = 14;
-    //    public void Init()
-    //    {
-    //        if (_proc == null)
-    //            return;
-
-    //        _hookID = SetHook(_proc);
-
-    //    }
-    //    private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-    //    {
-    //        if (nCode >= 0 && MouseMessages.WM_MOUSEMOVE == (MouseMessages)wParam)
-    //        {
-    //            MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
-    //            Console.WriteLine(hookStruct.pt.x + ", " + hookStruct.pt.y);
-    //        }
-
-    //        return CallNextHookEx(_hookID, nCode, wParam, lParam);
-    //    }
-    //    private IntPtr SetHook(LowLevelMouseProc proc)
-    //    {
-    //        using (Process curProcess = Process.GetCurrentProcess())
-    //        using (ProcessModule curModule = curProcess.MainModule)
-
-    //        {
-    //            return SetWindowsHookEx(WH_MOUSE_LL, proc,
-
-    //                GetModuleHandle(curModule.ModuleName), 0);
-    //        }
-    //    }
-    //}
-
-
-
-
-
-    //public static class MouseHook__
-    //{
-
-    //    private static LowLevelMouseProc _proc = HookCallback;
-
-    //    private static IntPtr _hookID = IntPtr.Zero;
-
-    //    public static void Init()
-    //    {
-    //        _hookID = SetHook(_proc);
-
-
-
-    //        UnhookWindowsHookEx(_hookID);
-    //    }
-
-    //    private static IntPtr SetHook(LowLevelMouseProc proc)
-    //    {
-    //        using (Process curProcess = Process.GetCurrentProcess())
-    //        using (ProcessModule curModule = curProcess.MainModule)
-
-    //        {
-    //            return SetWindowsHookEx(WH_MOUSE_LL, proc,
-
-    //                GetModuleHandle(curModule.ModuleName), 0);
-    //        }
-    //    }
-
-
-
-    //    private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-    //    {
-    //        if (nCode >= 0 && MouseMessages.WM_MOUSEMOVE == (MouseMessages)wParam)
-    //        {
-    //            MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
-    //            Console.WriteLine(hookStruct.pt.x + ", " + hookStruct.pt.y);
-    //        }
-
-    //        return CallNextHookEx(_hookID, nCode, wParam, lParam);
-    //    }
-
-    //    private const int WH_MOUSE_LL = 14;
-
-    //   
-
-    //    [StructLayout(LayoutKind.Sequential)]
-
-    //    private struct POINT
-    //    {
-    //        public int x;
-    //        public int y;
-    //    }
-
-    //    [StructLayout(LayoutKind.Sequential)]
-
-    //    private struct MSLLHOOKSTRUCT
-    //    {
-    //        public POINT pt;
-    //        public uint mouseData;
-    //        public uint flags;
-    //        public uint time;
-    //        public IntPtr dwExtraInfo;
-    //    }
-
-
-
-    //}
 
 
 }

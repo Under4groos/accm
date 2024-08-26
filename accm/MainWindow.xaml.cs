@@ -1,7 +1,6 @@
-﻿using accm.Module;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Windows;
-
+using System.Windows.Interop;
 namespace accm
 {
     /// <summary>
@@ -17,13 +16,23 @@ namespace accm
             this.Loaded += MainWindow_Loaded;
         }
 
+        IntPtr UIWindowHWND;
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            __key_down kd = (int key) =>
+            UIWindowHWND = new WindowInteropHelper(this).Handle;
+
+
+
+            if (Module.Helper.InitHook(UIWindowHWND) != -1)
             {
-                Debug.WriteLine(key);
-            };
-            int i = Module.Helper.InitHook(kd);
+
+            }
+
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Debug.WriteLine("Cluck");
         }
     }
 }
