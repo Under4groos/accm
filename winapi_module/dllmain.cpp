@@ -9,36 +9,71 @@ extern "C"
 #endif
 #define null NULL
 #define DLL __declspec(dllexport)
-	typedef int(__stdcall* _moue_hook)();
-	DLL void _cell_function(_moue_hook);
+	typedef int(__stdcall* _mouse_hook)(int key);
+	DLL void _cell_function(_mouse_hook);
 
 
 #ifdef __cplusplus
 }
 #endif
 HHOOK _mosuehook_thread;
-_moue_hook _g__moue_hook;
+_mouse_hook _g_mouse_hook;
+WPARAM _wParam{};
 LRESULT CALLBACK _mouse_hook_proc(
-	int nCode,
-	WPARAM wParam,
-	LPARAM lParam
+	int nCode, WPARAM wParam, LPARAM lParam
 )
 {
-	if (_g__moue_hook)
-		_g__moue_hook();
-	return CallNextHookEx(NULL, nCode, wParam, lParam);
-}
-extern "C" __declspec(dllexport) int InitHook(_moue_hook func) {
-	if (func)
-		return -1;
+	MOUSEHOOKSTRUCT* mhs = (MOUSEHOOKSTRUCT*)lParam;
+	if (mhs != null) {
+		_wParam = wParam;
+	}
 
-	_g__moue_hook = func;
-	_mosuehook_thread = SetWindowsHookEx(WH_MOUSE_LL, _mouse_hook_proc, null, null);
+	return CallNextHookEx(_mosuehook_thread, nCode, wParam, lParam);
+}
+DWORD WINAPI MouseTick(void* p)
+{
+	while (true)
+	{
+
+		if (_g_mouse_hook && _wParam != null)
+			_g_mouse_hook((int)_wParam);
+
+		_wParam = 0;
+
+		Sleep(1);
+	}
+
+
+
+}
+DWORD WINAPI CreateHook() {
+	_mosuehook_thread = SetWindowsHookEx(WH_MOUSE_LL, _mouse_hook_proc, GetModuleHandle(NULL), null);
+	MSG message;
+	while (GetMessage(&message, NULL, 0, 0)) {
+		TranslateMessage(&message);
+		DispatchMessage(&message);
+	}
+
+	UnhookWindowsHookEx(_mosuehook_thread);
+	return 0;
+}
+
+extern "C" __declspec(dllexport) int InitHook(_mouse_hook func) {
+	if (!func)
+		return -1;
+	DWORD dwThread;
+	CreateThread(0, 0, MouseTick, NULL, 0, NULL);
+	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)CreateHook, NULL, NULL, &dwThread);
+	_g_mouse_hook = func;
 	
+
 	return (int)_mosuehook_thread;
 }
+extern "C" __declspec(dllexport) int Test() {
+	return 100;
+}
 
-
+#pragma region dllmain
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
 	LPVOID lpReserved
@@ -54,4 +89,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	}
 	return TRUE;
 }
+#pragma endregion
+
+
 

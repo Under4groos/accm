@@ -1,13 +1,6 @@
-﻿using System.Text;
+﻿using accm.Module;
+using System.Diagnostics;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace accm
 {
@@ -19,6 +12,18 @@ namespace accm
         public MainWindow()
         {
             InitializeComponent();
+
+
+            this.Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            __key_down kd = (int key) =>
+            {
+                Debug.WriteLine(key);
+            };
+            int i = Module.Helper.InitHook(kd);
         }
     }
 }
